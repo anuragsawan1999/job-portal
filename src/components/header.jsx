@@ -1,31 +1,25 @@
-import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   SignedIn,
   SignedOut,
   UserButton,
   SignIn,
+  SignUp,
   useUser,
 } from "@clerk/clerk-react";
 import { Button } from "./ui/button";
 import { BriefcaseBusiness, Heart, PenBox } from "lucide-react";
 
 const Header = () => {
-  const [showSignIn, setShowSignIn] = useState(false);
-
-  const [search, setSearch] = useSearchParams();
+  const [authMode, setAuthMode] = useState(null);
   const { user } = useUser();
 
-  useEffect(() => {
-    if (search.get("sign-in")) {
-      setShowSignIn(true);
-    }
-  }, [search]);
+  const closeModal = () => setAuthMode(null);
 
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) {
-      setShowSignIn(false);
-      setSearch({});
+      closeModal();
     }
   };
 
@@ -36,12 +30,22 @@ const Header = () => {
           <img src="/logo.png" className="h-20" alt="Hirrd Logo" />
         </Link>
 
-        <div className="flex gap-8">
+        <div className="flex gap-3">
           <SignedOut>
-            <Button variant="outline" onClick={() => setShowSignIn(true)}>
+            <Button
+              variant="outline"
+              onClick={() => setAuthMode("signin")}
+            >
               Login
             </Button>
+
+            <Button
+              onClick={() => setAuthMode("signup")}
+            >
+              Sign Up
+            </Button>
           </SignedOut>
+
           <SignedIn>
             {user?.unsafeMetadata?.role === "recruiter" && (
               <Link to="/post-job">
@@ -51,6 +55,7 @@ const Header = () => {
                 </Button>
               </Link>
             )}
+
             <UserButton
               appearance={{
                 elements: {
@@ -76,15 +81,24 @@ const Header = () => {
         </div>
       </nav>
 
-      {showSignIn && (
+      {authMode && (
         <div
-          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
+          className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
           onClick={handleOverlayClick}
         >
-          <SignIn
-            signUpForceRedirectUrl="/onboarding"
-            fallbackRedirectUrl="/onboarding"
-          />
+          {authMode === "signin" && (
+            <SignIn
+              routing="virtual"
+              fallbackRedirectUrl="/onboarding"
+            />
+          )}
+
+          {authMode === "signup" && (
+            <SignUp
+              routing="virtual"
+              fallbackRedirectUrl="/onboarding"
+            />
+          )}
         </div>
       )}
     </>
